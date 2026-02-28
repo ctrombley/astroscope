@@ -60,7 +60,11 @@ function CameraAnimator({
   const prevTarget = useRef<Position3D | null>(null)
 
   useEffect(() => {
-    if (!flyTarget || !controlsRef.current) return
+    if (!flyTarget) {
+      prevTarget.current = null  // reset so the next fly isn't blocked
+      return
+    }
+    if (!controlsRef.current) return
     // Skip if same target as before
     if (
       prevTarget.current &&
