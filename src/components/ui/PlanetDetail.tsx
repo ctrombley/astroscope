@@ -23,20 +23,25 @@ export default function PlanetDetail({ planet, date, onClose }: PlanetDetailProp
   const sign = signAtDegree(longitudeDeg)
   const degInSign = longitudeDeg - sign.startDegree
   const decan = decanAtDegree(longitudeDeg)
-  const dignity = evaluateDignity(key, longitudeDeg)
-  const body = new CelestialBody(key)
+
+  // Earth is not a recognized astrological body — skip dignity and synodic calculations
+  const isStandardBody = key !== 'earth'
+  const dignity = isStandardBody ? evaluateDignity(key, longitudeDeg) : null
+  const body = isStandardBody ? new CelestialBody(key) : null
 
   // Synodic periods with other planets
-  const synodicPairs = ['mercury', 'venus', 'mars', 'jupiter', 'saturn']
-    .filter(k => k !== key)
-    .map(k => {
-      const other = new CelestialBody(k)
-      return {
-        name: other.name,
-        period: body.synodicPeriodWith(other),
-      }
-    })
-    .filter(s => isFinite(s.period) && s.period > 0)
+  const synodicPairs = isStandardBody
+    ? ['mercury', 'venus', 'mars', 'jupiter', 'saturn']
+        .filter(k => k !== key)
+        .map(k => {
+          const other = new CelestialBody(k)
+          return {
+            name: other.name,
+            period: body!.synodicPeriodWith(other),
+          }
+        })
+        .filter(s => isFinite(s.period) && s.period > 0)
+    : []
 
   return (
     <div className="absolute top-4 left-4 w-64 bg-black/90 backdrop-blur-sm border border-white/10 rounded-lg p-4 text-sm">
@@ -73,28 +78,30 @@ export default function PlanetDetail({ planet, date, onClose }: PlanetDetailProp
       </div>
 
       {/* Dignity */}
-      <div className="mb-3">
-        <h3 className="text-white/60 text-xs uppercase mb-1">Dignity Report</h3>
-        <div className="space-y-1">
-          {dignity.dignities.map((d, i) => (
-            <div key={i} className="flex justify-between text-xs">
-              <span className="text-white/70 capitalize">{d.type}</span>
-              <span className={d.score > 0 ? 'text-[#5A9A70]' : d.score < 0 ? 'text-[#9A4040]' : 'text-white/35'}>
-                {d.score > 0 ? '+' : ''}{d.score}
+      {dignity && (
+        <div className="mb-3">
+          <h3 className="text-white/60 text-xs uppercase mb-1">Dignity Report</h3>
+          <div className="space-y-1">
+            {dignity.dignities.map((d, i) => (
+              <div key={i} className="flex justify-between text-xs">
+                <span className="text-white/70 capitalize">{d.type}</span>
+                <span className={d.score > 0 ? 'text-[#5A9A70]' : d.score < 0 ? 'text-[#9A4040]' : 'text-white/35'}>
+                  {d.score > 0 ? '+' : ''}{d.score}
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between text-xs font-bold border-t border-white/10 pt-1 mt-1">
+              <span className="text-white/90">Total</span>
+              <span className={dignity.totalScore > 0 ? 'text-[#5A9A70]' : dignity.totalScore < 0 ? 'text-[#9A4040]' : 'text-white/50'}>
+                {dignity.totalScore > 0 ? '+' : ''}{dignity.totalScore}
               </span>
             </div>
-          ))}
-          <div className="flex justify-between text-xs font-bold border-t border-white/10 pt-1 mt-1">
-            <span className="text-white/90">Total</span>
-            <span className={dignity.totalScore > 0 ? 'text-[#5A9A70]' : dignity.totalScore < 0 ? 'text-[#9A4040]' : 'text-white/50'}>
-              {dignity.totalScore > 0 ? '+' : ''}{dignity.totalScore}
-            </span>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Orbital info */}
-      {body.orbitalPeriodYears && (
+      {body?.orbitalPeriodYears && (
         <div className="mb-3">
           <h3 className="text-white/60 text-xs uppercase mb-1">Orbital Data</h3>
           <div className="space-y-1 text-xs">

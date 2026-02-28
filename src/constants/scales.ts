@@ -10,6 +10,7 @@ export function scaleOrbitRadius(au: number): number {
 /** Non-physical planet display sizes (scene units) */
 export const PLANET_SIZES: Record<string, number> = {
   sun: 0.5,
+  earth: 0.11,
   moon: 0.08,
   mercury: 0.08,
   venus: 0.1,

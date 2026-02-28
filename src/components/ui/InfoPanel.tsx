@@ -6,8 +6,8 @@ import {
   MODALITIES,
 } from '@ctrombley/astrokit'
 import type { Chart } from '@ctrombley/astrokit'
-import { ELEMENT_COLORS, MODALITY_COLORS, ASPECT_COLORS } from '../../constants/colors'
-import type { PlanetPosition } from '../../types'
+import { ELEMENT_COLORS, MODALITY_COLORS, ASPECT_COLORS, PLANET_COLORS } from '../../constants/colors'
+import type { PlanetPosition, SelectedAspect } from '../../types'
 
 type Tab = 'positions' | 'aspects' | 'balance' | 'patterns' | 'lots'
 
@@ -18,6 +18,9 @@ interface InfoPanelProps {
   balance: ReturnType<Chart['balance']>
   patterns: string[]
   lots: ReturnType<Chart['lots']>
+  onSelectPlanet?: (key: string) => void
+  onSelectAspect?: (aspect: SelectedAspect) => void
+  selectedAspect?: SelectedAspect | null
 }
 
 export default function InfoPanel({
@@ -27,8 +30,14 @@ export default function InfoPanel({
   balance,
   patterns,
   lots,
+  onSelectPlanet,
+  onSelectAspect,
+  selectedAspect,
 }: InfoPanelProps) {
   const [tab, setTab] = useState<Tab>('positions')
+
+  // Map planet symbol → position key for sidebar clicks
+  const symbolToKey = Object.fromEntries(positions.map(p => [p.symbol, p.key]))
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'positions', label: 'Planets' },
@@ -59,56 +68,107 @@ export default function InfoPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 text-sm">
-        {tab === 'positions' && <PositionsTab positions={positions} />}
-        {tab === 'aspects' && <AspectsTab aspects={aspects} />}
+        {tab === 'positions' && (
+          <PositionsTab positions={positions} onSelectPlanet={onSelectPlanet} />
+        )}
+        {tab === 'aspects' && (
+          <AspectsTab
+            aspects={aspects}
+            symbolToKey={symbolToKey}
+            selectedAspect={selectedAspect ?? null}
+            onSelectAspect={onSelectAspect}
+          />
+        )}
         {tab === 'balance' && <BalanceTab balance={balance} />}
-        {tab === 'patterns' && <PatternsTab patterns={patterns} />}
+        {tab === 'patterns' && (
+          <PatternsTab patterns={patterns} positions={positions} symbolToKey={symbolToKey} onSelectPlanet={onSelectPlanet} />
+        )}
         {tab === 'lots' && <LotsTab lots={lots} />}
       </div>
     </div>
   )
 }
 
-function PositionsTab({ positions }: { positions: PlanetPosition[] }) {
+function PositionsTab({
+  positions,
+  onSelectPlanet,
+}: {
+  positions: PlanetPosition[]
+  onSelectPlanet?: (key: string) => void
+}) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {positions.map(p => {
         const sign = signAtDegree(p.longitudeDeg)
         const degInSign = p.longitudeDeg - sign.startDegree
+        const color = PLANET_COLORS[p.key] ?? '#aaaaaa'
         return (
-          <div key={p.key} className="flex items-center justify-between py-1">
-            <span className="text-white/90">
+          <button
+            key={p.key}
+            onClick={() => onSelectPlanet?.(p.key)}
+            className="w-full flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors text-left group"
+          >
+            <span
+              className="font-medium group-hover:brightness-125 transition-all"
+              style={{ color }}
+            >
               {p.symbol} {p.name}
             </span>
-            <span className="text-white/60 text-xs">
+            <span className="text-white/55 text-xs">
               {degInSign.toFixed(1)}&deg; {SIGN_SYMBOLS[sign.index]}
               {p.retrograde && <span className="text-[#9A4040] ml-1">Rx</span>}
             </span>
-          </div>
+          </button>
         )
       })}
     </div>
   )
 }
 
-function AspectsTab({ aspects }: { aspects: ReturnType<Chart['aspects']> }) {
+function AspectsTab({
+  aspects,
+  symbolToKey,
+  selectedAspect,
+  onSelectAspect,
+}: {
+  aspects: ReturnType<Chart['aspects']>
+  symbolToKey: Record<string, string>
+  selectedAspect: SelectedAspect | null
+  onSelectAspect?: (aspect: SelectedAspect) => void
+}) {
   return (
-    <div className="space-y-1">
-      {aspects.map((a, i) => (
-        <div key={i} className="flex items-center justify-between py-1 text-xs">
-          <span className="text-white/90">
-            {a.body1.body.symbol} {a.aspect.symbol} {a.body2.body.symbol}
-          </span>
-          <span style={{ color: ASPECT_COLORS[a.aspect.name] }}>
-            {a.aspect.name}
-          </span>
-          <span className="text-white/40">
-            {a.orb.toFixed(1)}&deg; {a.applying ? 'a' : 's'}
-          </span>
-        </div>
-      ))}
+    <div className="space-y-0.5">
+      {aspects.map((a, i) => {
+        const body1Key = symbolToKey[a.body1.body.symbol] ?? a.body1.body.key
+        const body2Key = symbolToKey[a.body2.body.symbol] ?? a.body2.body.key
+        const isSelected =
+          selectedAspect !== null &&
+          selectedAspect.body1Key === body1Key &&
+          selectedAspect.body2Key === body2Key &&
+          selectedAspect.aspectName === a.aspect.name
+        const aspectColor = ASPECT_COLORS[a.aspect.name]
+        return (
+          <button
+            key={i}
+            onClick={() => onSelectAspect?.({ body1Key, body2Key, aspectName: a.aspect.name })}
+            className={`w-full flex items-center justify-between py-1.5 px-2 rounded transition-colors text-left text-xs ${
+              isSelected ? 'bg-white/10' : 'hover:bg-white/5'
+            }`}
+          >
+            <span className="text-white/90">
+              {a.body1.body.symbol}{' '}
+              <span style={{ color: aspectColor }}>{a.aspect.symbol}</span>{' '}
+              {a.body2.body.symbol}
+            </span>
+            <span style={{ color: aspectColor }}>{a.aspect.name}</span>
+            <span className="text-white/40">
+              {a.orb.toFixed(1)}&deg; {a.applying ? 'a' : 's'}
+            </span>
+          </button>
+        )
+      })}
       {aspects.length === 0 && (
-        <p className="text-white/40 text-center">No aspects found</p>
+        <p className="text-white/40 text-center py-4">No aspects found</p>
       )}
     </div>
   )
@@ -177,16 +237,43 @@ function BalanceTab({ balance }: { balance: ReturnType<Chart['balance']> }) {
   )
 }
 
-function PatternsTab({ patterns }: { patterns: string[] }) {
+// Extract planet symbols from a pattern string like "Grand Trine: ♀ △ ♃ △ ♄"
+function extractSymbolsFromPattern(pattern: string): string[] {
+  // Match any unicode symbol that looks like a planet glyph (non-ASCII, non-whitespace, non-Latin)
+  const matches = pattern.match(/[\u2600-\u26FF\u2700-\u27BF\u{1F300}-\u{1F9FF}⊕]/gu) ?? []
+  return matches
+}
+
+function PatternsTab({
+  patterns,
+  positions,
+  symbolToKey,
+  onSelectPlanet,
+}: {
+  patterns: string[]
+  positions: PlanetPosition[]
+  symbolToKey: Record<string, string>
+  onSelectPlanet?: (key: string) => void
+}) {
   return (
     <div className="space-y-2">
-      {patterns.map((p, i) => (
-        <div key={i} className="py-1 px-2 bg-white/5 rounded text-white/80 text-xs">
-          {p}
-        </div>
-      ))}
+      {patterns.map((p, i) => {
+        const symbols = extractSymbolsFromPattern(p)
+        const firstKey = symbols.length > 0 ? symbolToKey[symbols[0] ?? ''] : undefined
+        return (
+          <button
+            key={i}
+            onClick={() => firstKey && onSelectPlanet?.(firstKey)}
+            className={`w-full py-1.5 px-2 bg-white/5 rounded text-white/80 text-xs text-left transition-colors ${
+              firstKey ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'
+            }`}
+          >
+            {p}
+          </button>
+        )
+      })}
       {patterns.length === 0 && (
-        <p className="text-white/40 text-center">No chart patterns detected</p>
+        <p className="text-white/40 text-center py-4">No chart patterns detected</p>
       )}
     </div>
   )
@@ -208,7 +295,7 @@ function LotsTab({ lots }: { lots: ReturnType<Chart['lots']> }) {
         )
       })}
       {lots.length === 0 && (
-        <p className="text-white/40 text-center">No lots available (need Ascendant)</p>
+        <p className="text-white/40 text-center py-4">No lots available (need Ascendant)</p>
       )}
     </div>
   )

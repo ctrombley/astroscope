@@ -4,10 +4,32 @@ interface TimeControlsProps {
   animation: AnimationState
 }
 
+// Exponential mapping between slider position [0, 100] and speed [0.01, 365] d/s.
+// This gives fine control at low speeds (night sky) and full planetary range at high.
+const MIN_SPEED = 0.01
+const MAX_SPEED = 365
+const LOG_RATIO = Math.log(MAX_SPEED / MIN_SPEED)
+
+function posToSpeed(pos: number): number {
+  return MIN_SPEED * Math.exp(LOG_RATIO * pos / 100)
+}
+
+function speedToPos(speed: number): number {
+  return 100 * Math.log(speed / MIN_SPEED) / LOG_RATIO
+}
+
+function formatSpeed(speed: number): string {
+  if (speed < 1 / 24) return `${(speed * 24 * 60).toFixed(0)} min/s`
+  if (speed < 1) return `${(speed * 24).toFixed(1)} h/s`
+  if (speed < 10) return `${speed.toFixed(1)} d/s`
+  return `${Math.round(speed)} d/s`
+}
+
 export default function TimeControls({ animation }: TimeControlsProps) {
   const { date, playing, speed, toggle, setSpeed, setDate, step } = animation
 
   const dateStr = date.toISOString().slice(0, 10)
+  const sliderPos = Math.round(speedToPos(speed))
 
   return (
     <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 px-6 py-3 bg-black/70 backdrop-blur-sm border-t border-white/10">
@@ -47,18 +69,18 @@ export default function TimeControls({ animation }: TimeControlsProps) {
         &raquo;
       </button>
 
-      {/* Speed slider */}
+      {/* Speed slider — exponential scale */}
       <div className="flex items-center gap-2">
         <span className="text-xs text-white/50">Speed</span>
         <input
           type="range"
-          min={1}
-          max={365}
-          value={speed}
-          onChange={e => setSpeed(Number(e.target.value))}
+          min={0}
+          max={100}
+          value={sliderPos}
+          onChange={e => setSpeed(posToSpeed(Number(e.target.value)))}
           className="w-24 accent-[#C9A84C]"
         />
-        <span className="text-xs text-white/70 w-16">{speed} d/s</span>
+        <span className="text-xs text-white/70 w-16">{formatSpeed(speed)}</span>
       </div>
 
       {/* Date picker */}

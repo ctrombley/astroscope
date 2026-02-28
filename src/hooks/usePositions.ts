@@ -24,6 +24,17 @@ export function usePositions(date: Date): PlanetPosition[] {
       dailyMotionDeg: dailyMotion('sun', jd),
     })
 
+    // Earth — at its heliocentric position (opposite of geocentric Sun)
+    positions.push({
+      key: 'earth',
+      name: 'Earth',
+      symbol: '⊕',
+      position: earthPosition3D(date),
+      longitudeDeg: (geocentricLongitude('sun', jd).degrees + 180) % 360,
+      retrograde: false,
+      dailyMotionDeg: 1.0,
+    })
+
     // Planets with orbital elements
     for (const key of ORBITING_PLANETS) {
       const planet = PLANETS[key]!

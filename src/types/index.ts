@@ -1,5 +1,13 @@
 import type { HouseSystem } from '@ctrombley/astrokit'
 
+export type ViewMode = 'orrery' | 'sky'
+
+export interface SelectedAspect {
+  body1Key: string
+  body2Key: string
+  aspectName: string
+}
+
 export interface Position3D {
   x: number
   y: number

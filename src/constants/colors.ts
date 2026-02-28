@@ -1,5 +1,6 @@
 export const PLANET_COLORS: Record<string, string> = {
   sun: '#C9A84C',
+  earth: '#3A80C8',
   moon: '#9AA0B0',
   mercury: '#808898',
   venus: '#C4884A',
