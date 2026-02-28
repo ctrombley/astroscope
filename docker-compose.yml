@@ -1,0 +1,10 @@
+services:
+  astroscope:
+    image: astroscope
+    build:
+      context: ..
+      dockerfile: astroscope/Dockerfile
+      additional_contexts:
+        - astrokit=../astrokit
+    ports:
+      - "8080:80"
