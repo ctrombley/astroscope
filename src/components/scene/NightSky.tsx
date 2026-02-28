@@ -435,7 +435,7 @@ export default function NightSky(props: NightSkyProps) {
   return (
     <Canvas
       camera={{ position: [0.001, 0, 0], fov: 75, near: 0.0001, far: 2000 }}
-      style={{ width: '100%', height: '100%' }}
+      style={{ width: '100%', height: '100%', pointerEvents: 'inherit' }}
       onPointerMissed={() => props.onSelectPlanet(null)}
     >
       <SkyScene {...props} />

@@ -175,7 +175,7 @@ export default function Orrery(props: OrreryProps) {
   return (
     <Canvas
       camera={{ position: [0, 20, 25], fov: 50 }}
-      style={{ width: '100%', height: '100%' }}
+      style={{ width: '100%', height: '100%', pointerEvents: 'inherit' }}
       onPointerMissed={() => props.onSelectPlanet(null)}
     >
       <OrreryScene {...props} />
