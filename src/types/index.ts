@@ -19,6 +19,12 @@ export interface Position3D {
   z: number
 }
 
+export interface FlyTarget {
+  position: Position3D
+  /** Override viewing distance; falls back to flyDistForPlanet when absent. */
+  distance?: number
+}
+
 export interface PlanetPosition {
   key: string
   name: string
@@ -46,6 +52,7 @@ export interface AppSettings {
   sidereal: boolean
   showMinorAspects: boolean
   showHarmonics: boolean
+  showAngles: boolean
   latitude: number
   longitude: number
 }

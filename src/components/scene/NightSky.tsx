@@ -261,7 +261,7 @@ function StarNameLabel({
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
       >
-        <sphereGeometry args={[18, 6, 6]} />
+        <sphereGeometry args={[35, 6, 6]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 

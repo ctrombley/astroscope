@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { Line } from '@react-three/drei'
+import { Line, Html } from '@react-three/drei'
+import { PATTERN_DESCRIPTIONS, patternTypeName } from '../../constants/descriptions'
 import type { PlanetPosition, SelectedPattern } from '../../types'
 
 interface PatternLinesProps {
@@ -8,19 +9,22 @@ interface PatternLinesProps {
 }
 
 export default function PatternLines({ positions, selectedPattern }: PatternLinesProps) {
-  const lines = useMemo(() => {
-    if (!selectedPattern || selectedPattern.bodyKeys.length < 2) return []
+  const { lines, centroid } = useMemo(() => {
+    if (!selectedPattern || selectedPattern.bodyKeys.length < 2) {
+      return { lines: [], centroid: null }
+    }
 
     const posMap = new Map(positions.map(p => [p.key, p]))
     const pts = selectedPattern.bodyKeys
       .map(k => posMap.get(k)?.position)
       .filter((p): p is { x: number; y: number; z: number } => p !== undefined)
 
-    if (pts.length < 2) return []
+    if (pts.length < 2) return { lines: [], centroid: null }
 
-    // Connect every pair — naturally produces the correct geometry:
-    // 3 bodies → triangle (Grand Trine, T-Square, Yod)
-    // 4 bodies → quadrilateral with diagonals (Grand Cross, Kite)
+    const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length
+    const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length
+    const cz = pts.reduce((s, p) => s + p.z, 0) / pts.length
+
     const result: [[number, number, number], [number, number, number]][] = []
     for (let i = 0; i < pts.length; i++) {
       for (let j = i + 1; j < pts.length; j++) {
@@ -30,10 +34,14 @@ export default function PatternLines({ positions, selectedPattern }: PatternLine
         ])
       }
     }
-    return result
+
+    return { lines: result, centroid: [cx, cy, cz] as [number, number, number] }
   }, [positions, selectedPattern])
 
-  if (lines.length === 0) return null
+  if (lines.length === 0 || !centroid || !selectedPattern) return null
+
+  const typeName = patternTypeName(selectedPattern.patternString)
+  const description = PATTERN_DESCRIPTIONS[typeName]
 
   return (
     <group>
@@ -44,12 +52,45 @@ export default function PatternLines({ positions, selectedPattern }: PatternLine
           color="#C9A84C"
           lineWidth={1.8}
           transparent
-          opacity={0.8}
+          opacity={0.7}
           dashed
           dashSize={0.25}
           gapSize={0.12}
         />
       ))}
+
+      {description && (
+        <Html position={centroid} center distanceFactor={22} style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background: 'rgba(6, 6, 14, 0.92)',
+            border: '1px solid rgba(201,168,76,0.4)',
+            borderRadius: '5px',
+            padding: '6px 10px',
+            maxWidth: '200px',
+            textAlign: 'center',
+            backdropFilter: 'blur(4px)',
+          }}>
+            <div style={{
+              color: '#C9A84C',
+              fontSize: '10px',
+              fontFamily: 'monospace',
+              fontWeight: 'bold',
+              letterSpacing: '0.06em',
+              marginBottom: '4px',
+            }}>
+              {typeName}
+            </div>
+            <div style={{
+              color: 'rgba(255,255,255,0.6)',
+              fontSize: '9px',
+              fontFamily: 'monospace',
+              lineHeight: '1.45',
+            }}>
+              {description}
+            </div>
+          </div>
+        </Html>
+      )}
     </group>
   )
 }

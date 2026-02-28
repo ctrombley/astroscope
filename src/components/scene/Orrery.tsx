@@ -10,8 +10,11 @@ import ZodiacRing from './ZodiacRing'
 import AspectLines from './AspectLines'
 import PatternLines from './PatternLines'
 import HarmonicOverlay from './HarmonicOverlay'
+import HouseCusps from './HouseCusps'
+import ZodiacSymbols from './ZodiacSymbols'
 import { PLANET_SIZES, ORBITING_PLANETS } from '../../constants/scales'
-import type { PlanetPosition, Position3D, SelectedAspect, SelectedPattern } from '../../types'
+import type { PlanetPosition, FlyTarget, SelectedAspect, SelectedPattern } from '../../types'
+
 import type { Chart } from '@ctrombley/astrokit'
 
 interface OrreryProps {
@@ -20,10 +23,12 @@ interface OrreryProps {
   selectedPlanet: string | null
   onSelectPlanet: (key: string | null) => void
   selectedAspect: SelectedAspect | null
+  onSelectAspect: (a: SelectedAspect) => void
   selectedPattern: SelectedPattern | null
   harmonicClusters: Map<number, number[][]>
   showHarmonics: boolean
-  flyTarget: Position3D | null
+  showAngles: boolean
+  flyTarget: FlyTarget | null
   onFlyComplete: () => void
 }
 
@@ -50,39 +55,40 @@ function CameraAnimator({
   controlsRef,
   onFlyComplete,
 }: {
-  flyTarget: Position3D | null
+  flyTarget: FlyTarget | null
   flyPlanetKey: string | null
   controlsRef: React.RefObject<any>
   onFlyComplete: () => void
 }) {
   const { camera } = useThree()
   const anim = useRef<AnimState | null>(null)
-  const prevTarget = useRef<Position3D | null>(null)
+  const prevPos = useRef<{ x: number; y: number; z: number } | null>(null)
 
   useEffect(() => {
     if (!flyTarget) {
-      prevTarget.current = null  // reset so the next fly isn't blocked
+      prevPos.current = null  // reset so the next fly isn't blocked
       return
     }
     if (!controlsRef.current) return
-    // Skip if same target as before
+    const { position: pos, distance } = flyTarget
+    // Skip if same target position as before
     if (
-      prevTarget.current &&
-      Math.abs(prevTarget.current.x - flyTarget.x) < 0.001 &&
-      Math.abs(prevTarget.current.y - flyTarget.y) < 0.001 &&
-      Math.abs(prevTarget.current.z - flyTarget.z) < 0.001
+      prevPos.current &&
+      Math.abs(prevPos.current.x - pos.x) < 0.001 &&
+      Math.abs(prevPos.current.y - pos.y) < 0.001 &&
+      Math.abs(prevPos.current.z - pos.z) < 0.001
     ) return
 
-    prevTarget.current = flyTarget
+    prevPos.current = pos
     const controls = controlsRef.current
-    const endTarget = new THREE.Vector3(flyTarget.x, flyTarget.y, flyTarget.z)
+    const endTarget = new THREE.Vector3(pos.x, pos.y, pos.z)
 
     // Maintain current view direction, just change distance and target
     const currentDir = camera.position.clone().sub(controls.target)
     const currentDist = currentDir.length()
     if (currentDist > 0) currentDir.divideScalar(currentDist)
 
-    const flyDist = flyDistForPlanet(flyPlanetKey ?? '')
+    const flyDist = distance ?? flyDistForPlanet(flyPlanetKey ?? '')
     const endCam = endTarget.clone().addScaledVector(currentDir, flyDist)
 
     anim.current = {
@@ -119,9 +125,11 @@ function OrreryScene({
   selectedPlanet,
   onSelectPlanet,
   selectedAspect,
+  onSelectAspect,
   selectedPattern,
   harmonicClusters,
   showHarmonics,
+  showAngles,
   flyTarget,
   onFlyComplete,
 }: OrreryProps) {
@@ -154,7 +162,9 @@ function OrreryScene({
       ))}
 
       <ZodiacRing />
-      <AspectLines chart={chart} positions={positions} selectedAspect={selectedAspect} selectedPattern={selectedPattern} />
+      <ZodiacSymbols />
+      <HouseCusps chart={chart} showAngles={showAngles} />
+      <AspectLines chart={chart} positions={positions} selectedAspect={selectedAspect} onSelectAspect={onSelectAspect} selectedPattern={selectedPattern} />
       <PatternLines positions={positions} selectedPattern={selectedPattern} />
       <HarmonicOverlay
         clusters={harmonicClusters}

@@ -11,15 +11,26 @@ import { useAnimation } from './hooks/useAnimation'
 import { useChart } from './hooks/useChart'
 import { usePositions } from './hooks/usePositions'
 import { useHarmonics } from './hooks/useHarmonics'
-import type { AppSettings, BirthChartData, ViewMode, Position3D, SelectedAspect, SelectedPattern } from './types'
+import type { AppSettings, BirthChartData, ViewMode, Position3D, FlyTarget, SelectedAspect, SelectedPattern } from './types'
 
 // Five-phase state machine for scene transitions.
 // orrery ──fly-to-earth──► fade-to-sky ──► sky
 //   ◄──────────────────── fade-to-orrery ◄──┘
 type ScenePhase = 'orrery' | 'fly-to-earth' | 'fade-to-sky' | 'sky' | 'fade-to-orrery'
 
+function loadStoredBirthChart(): BirthChartData | null {
+  try {
+    const stored = localStorage.getItem('astroscope-birth-chart')
+    if (!stored) return null
+    const parsed = JSON.parse(stored)
+    return { ...parsed, date: new Date(parsed.date) }
+  } catch { return null }
+}
+
+const _storedChart = loadStoredBirthChart()
+
 export default function App() {
-  const animation = useAnimation()
+  const animation = useAnimation(_storedChart?.date)
   const { date } = animation
 
   const [settings, setSettings] = useState<AppSettings>({
@@ -27,14 +38,15 @@ export default function App() {
     sidereal: false,
     showMinorAspects: false,
     showHarmonics: false,
-    latitude: 40.7128,  // New York
-    longitude: -74.006,
+    showAngles: true,
+    latitude: _storedChart?.latitude ?? 40.7128,
+    longitude: _storedChart?.longitude ?? -74.006,
   })
 
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null)
   const [selectedAspect, setSelectedAspect] = useState<SelectedAspect | null>(null)
   const [selectedPattern, setSelectedPattern] = useState<SelectedPattern | null>(null)
-  const [birthChart, setBirthChart] = useState<BirthChartData | null>(null)
+  const [birthChart, setBirthChart] = useState<BirthChartData | null>(_storedChart)
   const [showBirthChartModal, setShowBirthChartModal] = useState(false)
   const [scenePhase, setScenePhase] = useState<ScenePhase>('orrery')
   const [showConstellations, setShowConstellations] = useState(true)
@@ -54,6 +66,7 @@ export default function App() {
 
   const handleApplyBirthChart = useCallback((data: BirthChartData) => {
     setBirthChart(data)
+    localStorage.setItem('astroscope-birth-chart', JSON.stringify({ ...data, date: data.date.toISOString() }))
     animation.setDate(data.date)
     updateSettings({ latitude: data.latitude, longitude: data.longitude })
     setShowBirthChartModal(false)
@@ -61,6 +74,7 @@ export default function App() {
 
   const handleClearBirthChart = useCallback(() => {
     setBirthChart(null)
+    localStorage.removeItem('astroscope-birth-chart')
     setShowBirthChartModal(false)
   }, [])
 
@@ -79,15 +93,43 @@ export default function App() {
     : null
 
   // Fly target for the orrery camera.
-  const flyTarget = useMemo((): Position3D | null => {
+  const flyTarget = useMemo((): FlyTarget | null => {
     if (scenePhase === 'fly-to-earth') {
-      return positions.find(p => p.key === 'earth')?.position ?? null
+      const pos = positions.find(p => p.key === 'earth')?.position
+      return pos ? { position: pos } : null
     }
-    if (scenePhase === 'orrery' && selectedPlanet) {
-      return positions.find(p => p.key === selectedPlanet)?.position ?? null
+    if (scenePhase !== 'orrery') return null
+    if (selectedPlanet) {
+      const pos = positions.find(p => p.key === selectedPlanet)?.position
+      return pos ? { position: pos } : null
+    }
+    if (selectedAspect) {
+      const p1 = positions.find(p => p.key === selectedAspect.body1Key)?.position
+      const p2 = positions.find(p => p.key === selectedAspect.body2Key)?.position
+      if (!p1 || !p2) return null
+      const midpoint: Position3D = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2, z: (p1.z + p2.z) / 2 }
+      const sep = Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2 + (p1.z - p2.z) ** 2)
+      // Half-sep / tan(17.5°) ≈ half-sep * 3.2, with padding to 70% of the 50° FOV
+      return { position: midpoint, distance: Math.max(4, sep * 1.6) }
+    }
+    if (selectedPattern) {
+      const pts = selectedPattern.bodyKeys
+        .map(k => positions.find(p => p.key === k)?.position)
+        .filter((p): p is Position3D => p !== undefined)
+      if (pts.length === 0) return null
+      const centroid: Position3D = {
+        x: pts.reduce((s, p) => s + p.x, 0) / pts.length,
+        y: pts.reduce((s, p) => s + p.y, 0) / pts.length,
+        z: pts.reduce((s, p) => s + p.z, 0) / pts.length,
+      }
+      const maxDist = Math.max(...pts.map(p =>
+        Math.sqrt((p.x - centroid.x) ** 2 + (p.y - centroid.y) ** 2 + (p.z - centroid.z) ** 2)
+      ))
+      // maxDist / tan(17.5°) ≈ maxDist * 3.2, with padding to 70% of the 50° FOV
+      return { position: centroid, distance: Math.max(4, maxDist * 3.5) }
     }
     return null
-  }, [scenePhase, selectedPlanet, positions])
+  }, [scenePhase, selectedPlanet, selectedAspect, selectedPattern, positions])
 
   const handleFlyComplete = useCallback(() => {
     if (scenePhase === 'fly-to-earth') {
@@ -147,9 +189,11 @@ export default function App() {
           selectedPlanet={selectedPlanet}
           onSelectPlanet={handleSelectPlanet}
           selectedAspect={selectedAspect}
+          onSelectAspect={handleSelectAspect}
           selectedPattern={selectedPattern}
           harmonicClusters={harmonics.clusters}
           showHarmonics={settings.showHarmonics}
+          showAngles={settings.showAngles}
           flyTarget={flyTarget}
           onFlyComplete={handleFlyComplete}
         />

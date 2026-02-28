@@ -140,6 +140,21 @@ export default function SettingsBar({
               {settings.showHarmonics ? 'ON' : 'OFF'}
             </button>
           </div>
+
+          {/* Angles toggle */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-white/50">Angles</label>
+            <button
+              onClick={() => onUpdate({ showAngles: !settings.showAngles })}
+              className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+                settings.showAngles
+                  ? 'bg-[#C9A84C]/12 border-[#C9A84C]/35 text-[#C9A84C]'
+                  : 'bg-white/5 border-white/15 text-white/35'
+              }`}
+            >
+              {settings.showAngles ? 'ON' : 'OFF'}
+            </button>
+          </div>
         </>
       )}
 
