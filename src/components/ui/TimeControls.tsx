@@ -4,8 +4,6 @@ interface TimeControlsProps {
   animation: AnimationState
 }
 
-// Exponential mapping between slider position [0, 100] and speed [0.01, 365] d/s.
-// This gives fine control at low speeds (night sky) and full planetary range at high.
 const MIN_SPEED = 0.01
 const MAX_SPEED = 365
 const LOG_RATIO = Math.log(MAX_SPEED / MIN_SPEED)
@@ -32,11 +30,11 @@ export default function TimeControls({ animation }: TimeControlsProps) {
   const sliderPos = Math.round(speedToPos(speed))
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 px-6 py-3 bg-black/70 backdrop-blur-sm border-t border-white/10">
+    <div className="absolute bottom-0 left-0 right-0 md:right-72 flex items-center justify-center gap-2 md:gap-4 px-3 md:px-6 py-2 md:py-3 bg-black/70 backdrop-blur-sm border-t border-white/10">
       {/* Step back */}
       <button
         onClick={() => step(-1)}
-        className="px-2 py-1 text-sm text-white/80 hover:text-white border border-white/20 rounded"
+        className="px-2 py-1.5 md:py-1 text-sm text-white/80 hover:text-white border border-white/20 rounded"
         title="Step back 1 day"
       >
         &laquo;
@@ -45,7 +43,7 @@ export default function TimeControls({ animation }: TimeControlsProps) {
       {/* Play/Pause */}
       <button
         onClick={toggle}
-        className="w-8 h-7 flex items-center justify-center text-white/80 hover:text-white bg-white/8 hover:bg-white/15 border border-white/15 rounded transition-colors"
+        className="w-9 h-8 md:w-8 md:h-7 flex items-center justify-center text-white/80 hover:text-white bg-white/8 hover:bg-white/15 border border-white/15 rounded transition-colors"
         aria-label={playing ? 'Pause' : 'Play'}
       >
         {playing ? (
@@ -63,24 +61,24 @@ export default function TimeControls({ animation }: TimeControlsProps) {
       {/* Step forward */}
       <button
         onClick={() => step(1)}
-        className="px-2 py-1 text-sm text-white/80 hover:text-white border border-white/20 rounded"
+        className="px-2 py-1.5 md:py-1 text-sm text-white/80 hover:text-white border border-white/20 rounded"
         title="Step forward 1 day"
       >
         &raquo;
       </button>
 
-      {/* Speed slider — exponential scale */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-white/50">Speed</span>
+      {/* Speed slider */}
+      <div className="flex items-center gap-1 md:gap-2">
+        <span className="hidden md:inline text-xs text-white/50">Speed</span>
         <input
           type="range"
           min={0}
           max={100}
           value={sliderPos}
           onChange={e => setSpeed(posToSpeed(Number(e.target.value)))}
-          className="w-24 accent-[#C9A84C]"
+          className="w-16 md:w-24 accent-[#C9A84C]"
         />
-        <span className="text-xs text-white/70 w-16">{formatSpeed(speed)}</span>
+        <span className="text-xs text-white/70 w-12 md:w-16">{formatSpeed(speed)}</span>
       </div>
 
       {/* Date picker */}
@@ -91,7 +89,7 @@ export default function TimeControls({ animation }: TimeControlsProps) {
           const d = new Date(e.target.value + 'T12:00:00Z')
           if (!isNaN(d.getTime())) setDate(d)
         }}
-        className="px-2 py-1 text-sm bg-black/50 text-white border border-white/20 rounded"
+        className="px-2 py-1.5 md:py-1 text-xs md:text-sm bg-black/50 text-white border border-white/20 rounded"
       />
     </div>
   )

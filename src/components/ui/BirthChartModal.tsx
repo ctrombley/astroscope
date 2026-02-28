@@ -76,8 +76,8 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
   const canApply = birthDate && latitude !== null && longitude !== null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0D0D14] border border-white/15 rounded-lg shadow-2xl p-6 w-full max-w-sm flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-[#0D0D14] border border-white/15 rounded-t-2xl md:rounded-lg shadow-2xl p-5 md:p-6 w-full md:max-w-sm flex flex-col gap-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:pb-6">
         <h2 className="text-sm font-semibold text-[#C9A84C] tracking-widest uppercase">Birth Chart</h2>
 
         {/* Name */}
@@ -88,7 +88,7 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Albert Einstein"
-            className="px-2 py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
+            className="px-3 py-2 md:py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
           />
         </div>
 
@@ -99,7 +99,7 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
             type="date"
             value={birthDate}
             onChange={e => setBirthDate(e.target.value)}
-            className="px-2 py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
+            className="px-3 py-2 md:py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
           />
         </div>
 
@@ -111,11 +111,11 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
               type="time"
               value={birthTime}
               onChange={e => setBirthTime(e.target.value)}
-              className="px-2 py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
+              className="px-3 py-2 md:py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
             />
           </div>
-          <div className="flex flex-col gap-1 w-28">
-            <label className="text-xs text-white/50">UTC offset (hrs)</label>
+          <div className="flex flex-col gap-1 w-24 md:w-28">
+            <label className="text-xs text-white/50">UTC offset</label>
             <input
               type="number"
               value={utcOffset}
@@ -123,7 +123,7 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
               step={0.5}
               min={-14}
               max={14}
-              className="px-2 py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
+              className="px-3 py-2 md:py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
             />
           </div>
         </div>
@@ -138,12 +138,12 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
               onChange={e => { setPlace(e.target.value); setResolvedName(''); setLatitude(null); setLongitude(null); setGeoError('') }}
               onKeyDown={e => e.key === 'Enter' && handleFind()}
               placeholder="City, Country"
-              className="flex-1 px-2 py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
+              className="flex-1 px-3 py-2 md:py-1 text-sm bg-black/50 text-white border border-white/20 rounded focus:outline-none focus:border-[#C9A84C]/50"
             />
             <button
               onClick={handleFind}
               disabled={geoLoading || !place.trim()}
-              className="px-3 py-1 text-xs bg-white/5 hover:bg-white/10 border border-white/15 text-white/70 hover:text-white rounded transition-colors disabled:opacity-40"
+              className="px-3 py-2 md:py-1 text-xs bg-white/5 hover:bg-white/10 border border-white/15 text-white/70 hover:text-white rounded transition-colors disabled:opacity-40"
             >
               {geoLoading ? '...' : 'Find'}
             </button>
@@ -161,7 +161,7 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
           <button
             onClick={handleApply}
             disabled={!canApply}
-            className="flex-1 px-3 py-1.5 text-xs font-semibold rounded border transition-colors
+            className="flex-1 px-3 py-2 md:py-1.5 text-xs font-semibold rounded border transition-colors
               bg-[#C9A84C]/12 border-[#C9A84C]/35 text-[#C9A84C]
               hover:bg-[#C9A84C]/20 disabled:opacity-40 disabled:cursor-not-allowed"
           >
@@ -170,14 +170,14 @@ export default function BirthChartModal({ current, onApply, onClear, onClose }: 
           {current && (
             <button
               onClick={onClear}
-              className="px-3 py-1.5 text-xs rounded border border-white/15 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+              className="px-3 py-2 md:py-1.5 text-xs rounded border border-white/15 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
             >
               Clear
             </button>
           )}
           <button
             onClick={onClose}
-            className="px-3 py-1.5 text-xs rounded border border-white/15 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-3 py-2 md:py-1.5 text-xs rounded border border-white/15 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
           >
             Cancel
           </button>

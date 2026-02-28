@@ -39,8 +39,8 @@ export default function InfoPanel({
   selectedPattern,
 }: InfoPanelProps) {
   const [tab, setTab] = useState<Tab>('positions')
+  const [isOpen, setIsOpen] = useState(false)
 
-  // Map planet symbol → position key for sidebar clicks
   const symbolToKey = Object.fromEntries(positions.map(p => [p.symbol, p.key]))
 
   const tabs: { key: Tab; label: string }[] = [
@@ -52,49 +52,89 @@ export default function InfoPanel({
   ]
 
   return (
-    <div className="absolute top-0 right-0 w-72 h-full bg-black/80 backdrop-blur-sm border-l border-white/10 flex flex-col overflow-hidden">
-      {/* Tab bar */}
-      <div className="flex border-b border-white/10 shrink-0">
-        {tabs.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex-1 px-2 py-2 text-xs tracking-wide ${
-              tab === t.key
-                ? 'text-[#C9A84C] border-b border-[#C9A84C]/70'
-                : 'text-white/35 hover:text-white/65'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <>
+      {/* Mobile backdrop — closes drawer on outside tap */}
+      <div
+        className={`fixed inset-0 z-30 md:hidden transition-opacity duration-300 ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsOpen(false)}
+      />
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-3 text-sm">
-        {tab === 'positions' && (
-          <PositionsTab positions={positions} onSelectPlanet={onSelectPlanet} />
-        )}
-        {tab === 'aspects' && (
-          <AspectsTab
-            aspects={aspects}
-            symbolToKey={symbolToKey}
-            selectedAspect={selectedAspect ?? null}
-            onSelectAspect={onSelectAspect}
-          />
-        )}
-        {tab === 'balance' && <BalanceTab balance={balance} />}
-        {tab === 'patterns' && (
-          <PatternsTab
-            patterns={patterns}
-            symbolToKey={symbolToKey}
-            selectedPattern={selectedPattern ?? null}
-            onSelectPattern={onSelectPattern}
-          />
-        )}
-        {tab === 'lots' && <LotsTab lots={lots} />}
+      <div
+        className={[
+          // Mobile: fixed bottom drawer above TimeControls
+          'fixed bottom-11 left-0 right-0 z-40',
+          'max-h-[72vh]',
+          'transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-48px)]',
+          // Desktop: right sidebar (overrides all mobile positioning)
+          'md:absolute md:top-0 md:right-0 md:bottom-auto md:left-auto',
+          'md:w-72 md:h-full md:max-h-none md:translate-y-0 md:z-auto',
+          // Shared styles
+          'bg-black/80 backdrop-blur-sm',
+          'border-t md:border-t-0 md:border-l border-white/10',
+          'flex flex-col overflow-hidden',
+        ].join(' ')}
+      >
+        {/* Mobile drag handle */}
+        <div
+          className="md:hidden flex justify-center items-center py-2 cursor-pointer shrink-0"
+          onClick={() => setIsOpen(v => !v)}
+        >
+          <div className="w-8 h-0.5 rounded-full bg-white/30" />
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex border-b border-white/10 shrink-0">
+          {tabs.map(t => (
+            <button
+              key={t.key}
+              onClick={() => {
+                if (tab === t.key && isOpen) {
+                  setIsOpen(false)
+                } else {
+                  setTab(t.key)
+                  setIsOpen(true)
+                }
+              }}
+              className={`flex-1 px-2 py-2.5 md:py-2 text-xs tracking-wide transition-colors ${
+                tab === t.key
+                  ? 'text-[#C9A84C] border-b border-[#C9A84C]/70'
+                  : 'text-white/35 hover:text-white/65'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-3 text-sm">
+          {tab === 'positions' && (
+            <PositionsTab positions={positions} onSelectPlanet={onSelectPlanet} />
+          )}
+          {tab === 'aspects' && (
+            <AspectsTab
+              aspects={aspects}
+              symbolToKey={symbolToKey}
+              selectedAspect={selectedAspect ?? null}
+              onSelectAspect={onSelectAspect}
+            />
+          )}
+          {tab === 'balance' && <BalanceTab balance={balance} />}
+          {tab === 'patterns' && (
+            <PatternsTab
+              patterns={patterns}
+              symbolToKey={symbolToKey}
+              selectedPattern={selectedPattern ?? null}
+              onSelectPattern={onSelectPattern}
+            />
+          )}
+          {tab === 'lots' && <LotsTab lots={lots} />}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -115,7 +155,7 @@ function PositionsTab({
           <button
             key={p.key}
             onClick={() => onSelectPlanet?.(p.key)}
-            className="w-full flex items-center justify-between py-1.5 px-2 rounded hover:bg-white/5 transition-colors text-left group"
+            className="w-full flex items-center justify-between py-2 md:py-1.5 px-2 rounded hover:bg-white/5 transition-colors text-left group"
           >
             <span
               className="font-medium group-hover:brightness-125 transition-all"
@@ -160,7 +200,7 @@ function AspectsTab({
           <button
             key={i}
             onClick={() => onSelectAspect?.({ body1Key, body2Key, aspectName: a.aspect.name })}
-            className={`w-full flex items-center justify-between py-1.5 px-2 rounded transition-colors text-left text-xs ${
+            className={`w-full flex items-center justify-between py-2 md:py-1.5 px-2 rounded transition-colors text-left text-xs ${
               isSelected ? 'bg-white/10' : 'hover:bg-white/5'
             }`}
           >
@@ -246,9 +286,7 @@ function BalanceTab({ balance }: { balance: ReturnType<Chart['balance']> }) {
   )
 }
 
-// Extract planet symbols from a pattern string like "Grand Trine: ♀ △ ♃ △ ♄"
 function extractSymbolsFromPattern(pattern: string): string[] {
-  // Match any unicode symbol that looks like a planet glyph (non-ASCII, non-whitespace, non-Latin)
   const matches = pattern.match(/[\u2600-\u26FF\u2700-\u27BF\u{1F300}-\u{1F9FF}⊕]/gu) ?? []
   return matches
 }
@@ -275,7 +313,7 @@ function PatternsTab({
           <button
             key={i}
             onClick={() => bodyKeys.length > 0 && onSelectPattern?.({ patternString: p, bodyKeys })}
-            className={`w-full py-1.5 px-2 rounded text-white/80 text-xs text-left transition-colors ${
+            className={`w-full py-2 md:py-1.5 px-2 rounded text-white/80 text-xs text-left transition-colors ${
               isSelected
                 ? 'bg-white/10'
                 : bodyKeys.length > 0
@@ -301,7 +339,7 @@ function LotsTab({ lots }: { lots: ReturnType<Chart['lots']> }) {
         const sign = signAtDegree(l.position.degrees)
         const degInSign = l.position.degrees - sign.startDegree
         return (
-          <div key={i} className="flex items-center justify-between py-1 text-xs">
+          <div key={i} className="flex items-center justify-between py-1.5 md:py-1 text-xs">
             <span className="text-white/90">{l.lot.name}</span>
             <span className="text-white/60">
               {degInSign.toFixed(1)}&deg; {SIGN_SYMBOLS[sign.index]}

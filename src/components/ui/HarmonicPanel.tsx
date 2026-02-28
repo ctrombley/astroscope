@@ -12,7 +12,16 @@ export default function HarmonicPanel({ harmonics, visible }: HarmonicPanelProps
   const maxStrength = Math.max(...spectrum.map(s => s.strength), 0.001)
 
   return (
-    <div className="absolute bottom-16 left-4 w-72 bg-black/90 backdrop-blur-sm border border-white/10 rounded-lg p-4">
+    <div className={[
+      // Mobile: float below SettingsBar on the left
+      'fixed top-14 left-2 right-2 z-50',
+      'max-h-[50vh] overflow-y-auto',
+      // Desktop: absolute bottom-left above TimeControls
+      'md:absolute md:top-auto md:bottom-16 md:left-4',
+      'md:right-auto md:w-72 md:max-h-none',
+      // Shared
+      'bg-black/90 backdrop-blur-sm border border-white/10 rounded-lg p-4',
+    ].join(' ')}>
       <h3 className="text-white/80 text-sm font-bold mb-3">Harmonic Spectrum</h3>
       <div className="space-y-1">
         {spectrum.map(s => (

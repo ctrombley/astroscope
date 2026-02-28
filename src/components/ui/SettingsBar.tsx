@@ -37,12 +37,12 @@ export default function SettingsBar({
   const ayan = ayanamsa(jd)
 
   return (
-    <div className="absolute top-0 left-0 flex items-center gap-4 px-4 py-2 bg-black/70 backdrop-blur-sm border-b border-white/10">
+    <div className="absolute top-0 left-0 right-0 md:right-72 flex items-center gap-2 md:gap-4 px-3 md:px-4 py-2 bg-black/70 backdrop-blur-sm border-b border-white/10 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {/* View mode toggle */}
-      <div className="flex items-center gap-1 rounded border border-white/15 overflow-hidden">
+      <div className="flex items-center gap-1 rounded border border-white/15 overflow-hidden shrink-0">
         <button
           onClick={() => onSetViewMode('orrery')}
-          className={`px-2 py-0.5 text-xs transition-colors ${
+          className={`px-2 py-1.5 md:py-0.5 text-xs transition-colors ${
             viewMode === 'orrery'
               ? 'bg-[#C9A84C]/20 text-[#C9A84C] border-r border-white/10'
               : 'text-white/40 hover:text-white/70 border-r border-white/10'
@@ -52,7 +52,7 @@ export default function SettingsBar({
         </button>
         <button
           onClick={() => onSetViewMode('sky')}
-          className={`px-2 py-0.5 text-xs transition-colors ${
+          className={`px-2 py-1.5 md:py-0.5 text-xs transition-colors ${
             viewMode === 'sky'
               ? 'bg-[#3050A0]/20 text-[#6080d0]'
               : 'text-white/40 hover:text-white/70'
@@ -62,15 +62,15 @@ export default function SettingsBar({
         </button>
       </div>
 
-      {/* Sky mode overlays — only visible in sky view, fade in once settled */}
+      {/* Sky mode overlays */}
       {viewMode === 'sky' && (
         <div
-          className="flex items-center gap-3 border-l border-white/10 pl-4 transition-opacity duration-500"
+          className="flex items-center gap-2 md:gap-3 border-l border-white/10 pl-2 md:pl-4 transition-opacity duration-500 shrink-0"
           style={{ opacity: skySettled ? 1 : 0 }}
         >
           <button
             onClick={onToggleConstellations}
-            className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+            className={`px-2 py-1.5 md:py-0.5 text-xs rounded border transition-colors ${
               showConstellations
                 ? 'bg-[#4060b8]/20 border-[#4060b8]/50 text-[#7090d8]'
                 : 'bg-white/5 border-white/15 text-white/35 hover:text-white/60'
@@ -80,7 +80,7 @@ export default function SettingsBar({
           </button>
           <button
             onClick={onToggleStarNames}
-            className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+            className={`px-2 py-1.5 md:py-0.5 text-xs rounded border transition-colors ${
               showStarNames
                 ? 'bg-[#8080a0]/20 border-[#8080a0]/50 text-[#b0b0cc]'
                 : 'bg-white/5 border-white/15 text-white/35 hover:text-white/60'
@@ -91,16 +91,15 @@ export default function SettingsBar({
         </div>
       )}
 
-      {/* Orrery-mode controls — only visible in orrery view */}
+      {/* Orrery-mode controls */}
       {viewMode === 'orrery' && (
         <>
-          {/* House system */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <label className="text-xs text-white/50">Houses</label>
             <select
               value={settings.houseSystem}
               onChange={e => onUpdate({ houseSystem: e.target.value as HouseSystem })}
-              className="text-xs bg-black/50 text-white border border-white/20 rounded px-1 py-0.5"
+              className="text-xs bg-black/50 text-white border border-white/20 rounded px-1 py-1.5 md:py-0.5"
             >
               {HOUSE_SYSTEMS.map(h => (
                 <option key={h.value} value={h.value}>{h.label}</option>
@@ -108,12 +107,11 @@ export default function SettingsBar({
             </select>
           </div>
 
-          {/* Sidereal toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <label className="text-xs text-white/50">Sidereal</label>
             <button
               onClick={() => onUpdate({ sidereal: !settings.sidereal })}
-              className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+              className={`px-2 py-1.5 md:py-0.5 text-xs rounded border transition-colors ${
                 settings.sidereal
                   ? 'bg-[#C9A84C]/12 border-[#C9A84C]/35 text-[#C9A84C]'
                   : 'bg-white/5 border-white/15 text-white/35'
@@ -126,12 +124,11 @@ export default function SettingsBar({
             )}
           </div>
 
-          {/* Harmonics toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <label className="text-xs text-white/50">Harmonics</label>
             <button
               onClick={() => onUpdate({ showHarmonics: !settings.showHarmonics })}
-              className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+              className={`px-2 py-1.5 md:py-0.5 text-xs rounded border transition-colors ${
                 settings.showHarmonics
                   ? 'bg-[#7040A0]/15 border-[#7040A0]/40 text-[#9060C0]'
                   : 'bg-white/5 border-white/15 text-white/35'
@@ -141,12 +138,11 @@ export default function SettingsBar({
             </button>
           </div>
 
-          {/* Angles toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             <label className="text-xs text-white/50">Angles</label>
             <button
               onClick={() => onUpdate({ showAngles: !settings.showAngles })}
-              className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+              className={`px-2 py-1.5 md:py-0.5 text-xs rounded border transition-colors ${
                 settings.showAngles
                   ? 'bg-[#C9A84C]/12 border-[#C9A84C]/35 text-[#C9A84C]'
                   : 'bg-white/5 border-white/15 text-white/35'
@@ -158,11 +154,11 @@ export default function SettingsBar({
         </>
       )}
 
-      {/* Birth Chart — always visible */}
-      <div className="flex items-center gap-2">
+      {/* Birth Chart */}
+      <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
         <button
           onClick={onOpenBirthChart}
-          className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+          className={`px-2 py-1.5 md:py-0.5 text-xs rounded border transition-colors ${
             birthChart
               ? 'bg-[#C9A84C]/12 border-[#C9A84C]/35 text-[#C9A84C]'
               : 'bg-white/5 border-white/15 text-white/35 hover:text-white/60'
@@ -171,14 +167,14 @@ export default function SettingsBar({
           Birth Chart
         </button>
         {birthChart && (
-          <span className="px-2 py-0.5 text-xs rounded border bg-[#C9A84C]/10 border-[#C9A84C]/25 text-[#C9A84C]/80">
+          <span className="px-2 py-1.5 md:py-0.5 text-xs rounded border bg-[#C9A84C]/10 border-[#C9A84C]/25 text-[#C9A84C]/80">
             Natal: {birthChart.name || birthChart.locationName.split(',')[0]}
           </span>
         )}
       </div>
 
       {/* Precessional age */}
-      <div className="text-xs text-white/40 ml-auto">
+      <div className="text-xs text-white/40 ml-auto shrink-0 hidden md:block">
         Age of {age.ageName} ({age.degreeInSign.toFixed(1)}&deg;)
       </div>
     </div>

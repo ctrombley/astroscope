@@ -17,3 +17,11 @@ body,
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0.01em;
 }
+
+/* Allow env() safe-area insets on iOS */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .absolute.bottom-0,
+  .fixed.bottom-0 {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
