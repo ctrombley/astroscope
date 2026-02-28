@@ -5,11 +5,12 @@ import InfoPanel from './components/ui/InfoPanel'
 import PlanetDetail from './components/ui/PlanetDetail'
 import HarmonicPanel from './components/ui/HarmonicPanel'
 import SettingsBar from './components/ui/SettingsBar'
+import BirthChartModal from './components/ui/BirthChartModal'
 import { useAnimation } from './hooks/useAnimation'
 import { useChart } from './hooks/useChart'
 import { usePositions } from './hooks/usePositions'
 import { useHarmonics } from './hooks/useHarmonics'
-import type { AppSettings } from './types'
+import type { AppSettings, BirthChartData } from './types'
 
 export default function App() {
   const animation = useAnimation()
@@ -25,9 +26,23 @@ export default function App() {
   })
 
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null)
+  const [birthChart, setBirthChart] = useState<BirthChartData | null>(null)
+  const [showBirthChartModal, setShowBirthChartModal] = useState(false)
 
   const updateSettings = useCallback((partial: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...partial }))
+  }, [])
+
+  const handleApplyBirthChart = useCallback((data: BirthChartData) => {
+    setBirthChart(data)
+    animation.setDate(data.date)
+    updateSettings({ latitude: data.latitude, longitude: data.longitude })
+    setShowBirthChartModal(false)
+  }, [animation, updateSettings])
+
+  const handleClearBirthChart = useCallback(() => {
+    setBirthChart(null)
+    setShowBirthChartModal(false)
   }, [])
 
   const chartData = useChart(
@@ -57,7 +72,13 @@ export default function App() {
       />
 
       {/* UI Overlays */}
-      <SettingsBar settings={settings} date={date} onUpdate={updateSettings} />
+      <SettingsBar
+        settings={settings}
+        date={date}
+        onUpdate={updateSettings}
+        birthChart={birthChart}
+        onOpenBirthChart={() => setShowBirthChartModal(true)}
+      />
       <TimeControls animation={animation} />
       <InfoPanel
         chart={chartData.chart}
@@ -75,6 +96,14 @@ export default function App() {
         />
       )}
       <HarmonicPanel harmonics={harmonics} visible={settings.showHarmonics} />
+      {showBirthChartModal && (
+        <BirthChartModal
+          current={birthChart}
+          onApply={handleApplyBirthChart}
+          onClear={handleClearBirthChart}
+          onClose={() => setShowBirthChartModal(false)}
+        />
+      )}
     </div>
   )
 }

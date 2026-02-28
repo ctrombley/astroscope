@@ -1,11 +1,13 @@
 import { precessionalAge, dateToJD, ayanamsa } from '@ctrombley/astrokit'
 import type { HouseSystem } from '@ctrombley/astrokit'
-import type { AppSettings } from '../../types'
+import type { AppSettings, BirthChartData } from '../../types'
 
 interface SettingsBarProps {
   settings: AppSettings
   date: Date
   onUpdate: (partial: Partial<AppSettings>) => void
+  birthChart: BirthChartData | null
+  onOpenBirthChart: () => void
 }
 
 const HOUSE_SYSTEMS: { value: HouseSystem; label: string }[] = [
@@ -15,7 +17,7 @@ const HOUSE_SYSTEMS: { value: HouseSystem; label: string }[] = [
   { value: 'porphyry', label: 'Porphyry' },
 ]
 
-export default function SettingsBar({ settings, date, onUpdate }: SettingsBarProps) {
+export default function SettingsBar({ settings, date, onUpdate, birthChart, onOpenBirthChart }: SettingsBarProps) {
   const jd = dateToJD(date)
   const age = precessionalAge(jd)
   const ayan = ayanamsa(jd)
@@ -67,6 +69,25 @@ export default function SettingsBar({ settings, date, onUpdate }: SettingsBarPro
         >
           {settings.showHarmonics ? 'ON' : 'OFF'}
         </button>
+      </div>
+
+      {/* Birth Chart */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenBirthChart}
+          className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+            birthChart
+              ? 'bg-[#C9A84C]/12 border-[#C9A84C]/35 text-[#C9A84C]'
+              : 'bg-white/5 border-white/15 text-white/35 hover:text-white/60'
+          }`}
+        >
+          Birth Chart
+        </button>
+        {birthChart && (
+          <span className="px-2 py-0.5 text-xs rounded border bg-[#C9A84C]/10 border-[#C9A84C]/25 text-[#C9A84C]/80">
+            Natal: {birthChart.name || birthChart.locationName.split(',')[0]}
+          </span>
+        )}
       </div>
 
       {/* Precessional age */}

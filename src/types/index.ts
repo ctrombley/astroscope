@@ -36,3 +36,11 @@ export interface AppSettings {
   latitude: number
   longitude: number
 }
+
+export interface BirthChartData {
+  name?: string
+  date: Date        // UTC
+  latitude: number
+  longitude: number
+  locationName: string
+}
