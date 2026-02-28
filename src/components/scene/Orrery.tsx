@@ -8,9 +8,10 @@ import OrbitRing from './OrbitRing'
 import Planet from './Planet'
 import ZodiacRing from './ZodiacRing'
 import AspectLines from './AspectLines'
+import PatternLines from './PatternLines'
 import HarmonicOverlay from './HarmonicOverlay'
 import { PLANET_SIZES, ORBITING_PLANETS } from '../../constants/scales'
-import type { PlanetPosition, Position3D, SelectedAspect } from '../../types'
+import type { PlanetPosition, Position3D, SelectedAspect, SelectedPattern } from '../../types'
 import type { Chart } from '@ctrombley/astrokit'
 
 interface OrreryProps {
@@ -19,6 +20,7 @@ interface OrreryProps {
   selectedPlanet: string | null
   onSelectPlanet: (key: string | null) => void
   selectedAspect: SelectedAspect | null
+  selectedPattern: SelectedPattern | null
   harmonicClusters: Map<number, number[][]>
   showHarmonics: boolean
   flyTarget: Position3D | null
@@ -113,6 +115,7 @@ function OrreryScene({
   selectedPlanet,
   onSelectPlanet,
   selectedAspect,
+  selectedPattern,
   harmonicClusters,
   showHarmonics,
   flyTarget,
@@ -122,7 +125,9 @@ function OrreryScene({
 
   const highlightedBodies = selectedAspect
     ? new Set([selectedAspect.body1Key, selectedAspect.body2Key])
-    : null
+    : selectedPattern
+      ? new Set(selectedPattern.bodyKeys)
+      : null
 
   return (
     <>
@@ -145,7 +150,8 @@ function OrreryScene({
       ))}
 
       <ZodiacRing />
-      <AspectLines chart={chart} positions={positions} selectedAspect={selectedAspect} />
+      <AspectLines chart={chart} positions={positions} selectedAspect={selectedAspect} selectedPattern={selectedPattern} />
+      <PatternLines positions={positions} selectedPattern={selectedPattern} />
       <HarmonicOverlay
         clusters={harmonicClusters}
         positions={positions}

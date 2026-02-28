@@ -7,7 +7,7 @@ import {
 } from '@ctrombley/astrokit'
 import type { Chart } from '@ctrombley/astrokit'
 import { ELEMENT_COLORS, MODALITY_COLORS, ASPECT_COLORS, PLANET_COLORS } from '../../constants/colors'
-import type { PlanetPosition, SelectedAspect } from '../../types'
+import type { PlanetPosition, SelectedAspect, SelectedPattern } from '../../types'
 
 type Tab = 'positions' | 'aspects' | 'balance' | 'patterns' | 'lots'
 
@@ -21,6 +21,8 @@ interface InfoPanelProps {
   onSelectPlanet?: (key: string) => void
   onSelectAspect?: (aspect: SelectedAspect) => void
   selectedAspect?: SelectedAspect | null
+  onSelectPattern?: (pattern: SelectedPattern) => void
+  selectedPattern?: SelectedPattern | null
 }
 
 export default function InfoPanel({
@@ -33,6 +35,8 @@ export default function InfoPanel({
   onSelectPlanet,
   onSelectAspect,
   selectedAspect,
+  onSelectPattern,
+  selectedPattern,
 }: InfoPanelProps) {
   const [tab, setTab] = useState<Tab>('positions')
 
@@ -81,7 +85,12 @@ export default function InfoPanel({
         )}
         {tab === 'balance' && <BalanceTab balance={balance} />}
         {tab === 'patterns' && (
-          <PatternsTab patterns={patterns} positions={positions} symbolToKey={symbolToKey} onSelectPlanet={onSelectPlanet} />
+          <PatternsTab
+            patterns={patterns}
+            symbolToKey={symbolToKey}
+            selectedPattern={selectedPattern ?? null}
+            onSelectPattern={onSelectPattern}
+          />
         )}
         {tab === 'lots' && <LotsTab lots={lots} />}
       </div>
@@ -246,26 +255,32 @@ function extractSymbolsFromPattern(pattern: string): string[] {
 
 function PatternsTab({
   patterns,
-  positions,
   symbolToKey,
-  onSelectPlanet,
+  selectedPattern,
+  onSelectPattern,
 }: {
   patterns: string[]
-  positions: PlanetPosition[]
   symbolToKey: Record<string, string>
-  onSelectPlanet?: (key: string) => void
+  selectedPattern: SelectedPattern | null
+  onSelectPattern?: (pattern: SelectedPattern) => void
 }) {
   return (
     <div className="space-y-2">
       {patterns.map((p, i) => {
-        const symbols = extractSymbolsFromPattern(p)
-        const firstKey = symbols.length > 0 ? symbolToKey[symbols[0] ?? ''] : undefined
+        const bodyKeys = extractSymbolsFromPattern(p)
+          .map(s => symbolToKey[s])
+          .filter((k): k is string => k !== undefined)
+        const isSelected = selectedPattern?.patternString === p
         return (
           <button
             key={i}
-            onClick={() => firstKey && onSelectPlanet?.(firstKey)}
-            className={`w-full py-1.5 px-2 bg-white/5 rounded text-white/80 text-xs text-left transition-colors ${
-              firstKey ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'
+            onClick={() => bodyKeys.length > 0 && onSelectPattern?.({ patternString: p, bodyKeys })}
+            className={`w-full py-1.5 px-2 rounded text-white/80 text-xs text-left transition-colors ${
+              isSelected
+                ? 'bg-white/10'
+                : bodyKeys.length > 0
+                  ? 'bg-white/5 hover:bg-white/10 cursor-pointer'
+                  : 'bg-white/5 cursor-default'
             }`}
           >
             {p}

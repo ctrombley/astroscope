@@ -1,16 +1,17 @@
 import { useMemo } from 'react'
 import { Line } from '@react-three/drei'
 import { ASPECT_COLORS } from '../../constants/colors'
-import type { PlanetPosition, SelectedAspect } from '../../types'
+import type { PlanetPosition, SelectedAspect, SelectedPattern } from '../../types'
 import type { Chart } from '@ctrombley/astrokit'
 
 interface AspectLinesProps {
   chart: Chart
   positions: PlanetPosition[]
   selectedAspect: SelectedAspect | null
+  selectedPattern: SelectedPattern | null
 }
 
-export default function AspectLines({ chart, positions, selectedAspect }: AspectLinesProps) {
+export default function AspectLines({ chart, positions, selectedAspect, selectedPattern }: AspectLinesProps) {
   const aspects = chart.aspects(false)
 
   const lines = useMemo(() => {
@@ -49,7 +50,7 @@ export default function AspectLines({ chart, positions, selectedAspect }: Aspect
       }[]
   }, [aspects, positions])
 
-  const hasSelection = selectedAspect !== null
+  const hasSelection = selectedAspect !== null || selectedPattern !== null
 
   return (
     <group>

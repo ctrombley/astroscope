@@ -8,6 +8,11 @@ export interface SelectedAspect {
   aspectName: string
 }
 
+export interface SelectedPattern {
+  patternString: string   // full string used as identity key
+  bodyKeys: string[]      // planet keys of all involved bodies
+}
+
 export interface Position3D {
   x: number
   y: number

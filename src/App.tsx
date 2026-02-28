@@ -11,7 +11,7 @@ import { useAnimation } from './hooks/useAnimation'
 import { useChart } from './hooks/useChart'
 import { usePositions } from './hooks/usePositions'
 import { useHarmonics } from './hooks/useHarmonics'
-import type { AppSettings, BirthChartData, ViewMode, Position3D, SelectedAspect } from './types'
+import type { AppSettings, BirthChartData, ViewMode, Position3D, SelectedAspect, SelectedPattern } from './types'
 
 // Five-phase state machine for scene transitions.
 // orrery ──fly-to-earth──► fade-to-sky ──► sky
@@ -33,6 +33,7 @@ export default function App() {
 
   const [selectedPlanet, setSelectedPlanet] = useState<string | null>(null)
   const [selectedAspect, setSelectedAspect] = useState<SelectedAspect | null>(null)
+  const [selectedPattern, setSelectedPattern] = useState<SelectedPattern | null>(null)
   const [birthChart, setBirthChart] = useState<BirthChartData | null>(null)
   const [showBirthChartModal, setShowBirthChartModal] = useState(false)
   const [scenePhase, setScenePhase] = useState<ScenePhase>('orrery')
@@ -92,6 +93,7 @@ export default function App() {
     if (scenePhase === 'fly-to-earth') {
       setSelectedPlanet(null)
       setSelectedAspect(null)
+      setSelectedPattern(null)
       setScenePhase('fade-to-sky')
     }
   }, [scenePhase])
@@ -108,12 +110,20 @@ export default function App() {
 
   const handleSelectPlanet = useCallback((key: string | null) => {
     setSelectedPlanet(key)
-    setSelectedAspect(null)  // clear aspect highlight when picking a planet
+    setSelectedAspect(null)
+    setSelectedPattern(null)
   }, [])
 
   const handleSelectAspect = useCallback((aspect: SelectedAspect) => {
     setSelectedAspect(aspect)
-    setSelectedPlanet(null)  // clear planet selection when picking an aspect
+    setSelectedPlanet(null)
+    setSelectedPattern(null)
+  }, [])
+
+  const handleSelectPattern = useCallback((pattern: SelectedPattern) => {
+    setSelectedPattern(pattern)
+    setSelectedAspect(null)
+    setSelectedPlanet(null)
   }, [])
 
   return (
@@ -137,6 +147,7 @@ export default function App() {
           selectedPlanet={selectedPlanet}
           onSelectPlanet={handleSelectPlanet}
           selectedAspect={selectedAspect}
+          selectedPattern={selectedPattern}
           harmonicClusters={harmonics.clusters}
           showHarmonics={settings.showHarmonics}
           flyTarget={flyTarget}
@@ -158,6 +169,7 @@ export default function App() {
             setScenePhase('orrery')
             setSelectedPlanet(null)
             setSelectedAspect(null)
+            setSelectedPattern(null)
           }
         }}
       >
@@ -198,6 +210,8 @@ export default function App() {
         onSelectPlanet={handleSelectPlanet}
         onSelectAspect={handleSelectAspect}
         selectedAspect={selectedAspect}
+        onSelectPattern={handleSelectPattern}
+        selectedPattern={selectedPattern}
       />
       {selectedPlanetData && (
         <PlanetDetail
